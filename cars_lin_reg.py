@@ -1,23 +1,23 @@
 from PIL import Image
 import numpy as np
 
-img = Image.open('cars/resized_train/1.jpg')
-train_x = np.asarray(img).reshape(270000,1)  #normalde tek bir örnek için train_x (300,300,3) shape'inde bir matrix. onu (300*300*3,1) shape'ine çeviriyoruz, yani unroll ediyoruz. 
+img = Image.open('cars/resized_train/1.jpg') 
+train_x = np.asarray(img).reshape(270000,1)  #for one example, train_x is a matrix with shape (300,300,3). therefore, we are giving a new shape which is (300*300*3,1)  
                                                    
 
-for i in range(2,201):  #training set 200 resimden oluşuyor.
+for i in range(2,201):  #training set consists of 200 images.
     i = str(i)
     img = Image.open('cars/resized_train/'+i+'.jpg')
     numpydata = np.asarray(img).reshape(270000,1)
     train_x = np.hstack((train_x,numpydata))
  
-train_x = train_x / 255   #standardizasyon                           #sonuçta train_x (300*300*3,m) shape'inde bir matrix'e dönüşüyor.
+train_x = train_x / 255   #standardization                           #now, train_x is a matrix with shape (300*300*3,m)
 
 img = Image.open('cars/resized_test/1.jpg')
 test_x = np.asarray(img).reshape(270000,1)
 
 
-for i in range(2,51):  #test set 50 resimden oluşuyor.
+for i in range(2,51):  #test set consists of 50 images.
     print(i)
     i = str(i)
     img = Image.open('cars/resized_test/'+i+'.jpg')
@@ -25,23 +25,19 @@ for i in range(2,51):  #test set 50 resimden oluşuyor.
     test_x = np.hstack((test_x,numpydata))
 
 
-test_x = test_x/255  #standardizasyon
+test_x = test_x/255  #standardization
 
 
-#train setteki resimlerin ilk 100 tanesi araba resmi, kalan 100 tanesi ise alakasız resimler. bu yüzden buna uygun (1,200) shape'inde train_y matrisi yaratıyoruz.
+#first 100 images in the training set are car images, and last 100 are irrelevant images. therefore, we create a train_y matrix with shape (1,200) accordingly.
 train_y = np.hstack((np.ones((1,100)),np.zeros((1,100))))
-
-#test setteki resimlerin ilk 25 tanesi alakasız resim, kalan 25 tanesi ise araba resmi. bu yüzden (1,50) shape'ine sahip uygun matris yaratıyoruz.
+ 
+#first 25 images in the test set are irrelevant images, and last 25 are car images. therefore, we create a test_y matrix with shape (1,50) accordingly. 
 test_y = np.hstack((np.zeros((1,25)),np.ones((1,25))))
 
-#train_x, train_y, test_x, test_y matrislerini istediğimiz formata getirdikten sonra ML yapacak fonksiyonları oluşturuyoruz.
+#after creating train_x, train_y, test_x, test_y matrices, now we can make the functions we need.
 
 #=================================================================================================================================================================
 
-#sigmoid fonksiyonunu hem propagate hem de predict fonksiyonunda kullanıyoruz.
-#bizim için en önemli özelliği predict fonksiyonundaki işlevi. çünkü sigmoid fonksiyonu ile
-#(1,m) shapeine sahip bir matris elde ediyoruz ve bu matrisin elemanları eğer 0.5'ten büyükse
-#predict fonksiyonu ile direkt 1, değilse 0 kabul ediliyor.
 
 # z = np.dot(w.T,X) + b 
 
@@ -50,7 +46,7 @@ def sigmoid(z):
     return s
 
   
-#w bir sütun matris olmalı, b ise float 0 olmalı.
+#w should be a column matrix, and b should be float 0.
 
 def initialize(dim):
     w = np.zeros((dim,1))
@@ -58,7 +54,7 @@ def initialize(dim):
     return w,b
 
 
-#burada forward ve back propagation yapıyoruz. aslında özünde yaptığımız şey tamamen chain rule'dan ibaret. 
+#here, we do calculations for the forward and back propagate. 
 
 def propagate(w,b,X,Y):
     m = X.shape[1]
@@ -70,8 +66,7 @@ def propagate(w,b,X,Y):
     grads = {"dw":dw, "db":db}
     return grads, cost
 
-#yukardaki propagate fonksiyonunu aşağıdaki gradient descent algoritmasında for loop içine yazıyoruz ki her iterationda bize dw ve db hesaplasın. 
-#optimizasyonu gradient descent algoritmasıyla yapıyoruz. 
+#also, for every iteration we use propagate() in the for loop below while calculating dw and db.  
 
 def optimize(w,b,X,Y,iter=100,lrate=0.009,print_cost=False):
     
@@ -94,8 +89,7 @@ def optimize(w,b,X,Y,iter=100,lrate=0.009,print_cost=False):
     return params,grads,costs
 
 
- 
-#predict fonksiyonu ile sigmoid fonksiyonun outputu olan A matrisine bakılarak Y_prediction tahmin ediliyor.
+#predict() function estimates the result by looking at the matrix A which is the output of the sigmoid function.  
 
 def predict(w,b,X):
     m = X.shape[1]
@@ -111,7 +105,7 @@ def predict(w,b,X):
     return Y_predict
 
 
-#son olarak model() fonksiyonuyla yukardaki tüm fonksiyonları tek bir çatı altında topluyoruz.  
+#finally, we gather all the above functions under one roof with the model() function.
 
 def model(X_train,Y_train,X_test,Y_test,iter=2000,lrate=0.5,print_cost = False):
     w,b = initialize(X_train.shape[0])
@@ -122,21 +116,17 @@ def model(X_train,Y_train,X_test,Y_test,iter=2000,lrate=0.5,print_cost = False):
     Y_predict_train = predict(w,b,X_train)
     
     if print_cost:
-        print(f'train accuracy: {100-np.mean(np.abs(Y_predict_train - Y_train))*100}%')  #train accuracy hesabı.
-        print(f'test accuracy: {100-np.mean(np.abs(Y_predict_test - Y_test))*100}%')     #test accuracy hesabı.
+        print(f'train accuracy: {100-np.mean(np.abs(Y_predict_train - Y_train))*100}%')  #calculation for train accuracy.
+        print(f'test accuracy: {100-np.mean(np.abs(Y_predict_test - Y_test))*100}%')     #calculation for test accuracy.
 
 
 
 
 # model(train_x, train_y, test_x, test_y, iter= 250, lrate= 0.0009, print_cost = True)
 
-
-# 250 iteration ve 0.0009 learning rate için yukardaki kodu çalıştırdığımızda, 
+# OUTPUT; 
   
 # train accuracy: 97.5% 
 # test accuracy:  80.0% 
 
-#şeklinde bir output alıyoruz ki böyle basit bir algoritma için iyi bir oran.
-#iteration'ı 250'den daha fazla yapmamamızın sebebi overfitting olmasını engellemek. 
-#örneğin 2000 yaptık diyelim, bu durumda train accuracy 100% oluyor fakat test accuracy'den kaybediyoruz.
-#ilerleyen zamanlarda bunu önlemek için cost function içine regularization ifadesi ekleyeceğiz.
+#NOTE: This result show us there is a high variance problem. 
